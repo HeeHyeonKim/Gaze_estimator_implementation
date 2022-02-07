@@ -73,6 +73,9 @@ class Trainer():
             imgs = imgs.to(torch.device("cuda"))
             img_names = samples["name"]
 
+            if self.opt.model == "Img_with_Latent":
+                latents = samples["latent"].to(torch.device("cuda"))
+
             # latents = samples["latent"].to(torch.device("cuda"))
 
             # Gaze Estimator의 옵티마이저를 초기화 한다.
@@ -89,7 +92,11 @@ class Trainer():
             gaze_batch_label = gaze_batch_label.cuda()
 
             # 순전파 연산을 통해서 모델에 입력을 넣어준다.
-            angular_out  = self.model(imgs)
+            if self.opt.model == "Img_with_Latent":
+                angular_out  = self.model(imgs,latents)
+            else:
+                angular_out  = self.model(imgs)
+            
             gaze_loss, angular_error = computeGazeLoss(angular_out, gaze_batch_label)
 
             total_gaze_loss += gaze_loss
@@ -162,7 +169,8 @@ class Trainer():
                 img = img.to(torch.device("cuda"))
                 img_name = sample["name"]
 
-                # latent = sample["latent"].to(torch.device("cuda"))
+                if self.opt.model == "Img_with_Latent":
+                    latent = sample["latent"].to(torch.device("cuda"))
 
                 # 배치 단위의 학습 데이터의 파일명을 통해서 GT 시선 라벨을 불러온다.
                 # 또한 불러온 라벨을 GPU 연산에 사용하기 위하여 cuda를 붙인다.
@@ -170,7 +178,11 @@ class Trainer():
                 gaze_batch_label = gaze_batch_label.cuda()
 
                 # 순전파 연산을 통해서 모델에 입력을 넣어준다.
-                angular_out = self.model(img)
+                if self.opt.model == "Img_with_Latent":
+                    angular_out  = self.model(img, latent)
+                else:
+                    angular_out  = self.model(img)
+                
                 gaze_loss, angular_error = computeGazeLoss(angular_out, gaze_batch_label)
 
                 total_gaze_loss += gaze_loss
